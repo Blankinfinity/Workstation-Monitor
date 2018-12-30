@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 
 namespace Workstation_Monitor
@@ -44,11 +45,11 @@ namespace Workstation_Monitor
             Console.WriteLine(nFound.ToString() + " devices found! Elapsed time: " + ts.ToString(), "Synchronous");
         }
 
-        public async void RunPingSweep_Async()
+        public async Task RunPingSweep_Async()
         {
             nFound = 0;
 
-            var tasks = new List<Task>();
+            var tasks = new List<Task<PingReply>>();
 
             stopWatch.Start();
 
@@ -61,15 +62,34 @@ namespace Workstation_Monitor
                 tasks.Add(task);
             }
 
-            await Task.WhenAll(tasks).ContinueWith(t =>
+            var results = Task.WhenAll(tasks);
+
+            try
+            {
+                results.Wait();
+            }
+            catch (AggregateException)
+            {
+
+            }
+
+            if (results.Status == TaskStatus.RanToCompletion)
             {
                 stopWatch.Stop();
                 ts = stopWatch.Elapsed;
+                foreach (var result in results.Result)
+                {
+
+                    if (result.Address.ToString() != "0.0.0.0")
+                    {
+                        Console.WriteLine("{0} is up: ({1}ms)", result.Address.ToString(), result.RoundtripTime.ToString());
+                    }
+                }
                 Console.WriteLine(nFound.ToString() + " devices found! Elapsed time: " + ts.ToString(), "Asynchronous");
-            });
+            }
         }
 
-        private async Task PingAndUpdateAsync(System.Net.NetworkInformation.Ping ping, string ip)
+        private async Task<PingReply> PingAndUpdateAsync(System.Net.NetworkInformation.Ping ping, string ip)
         {
             var reply = await ping.SendPingAsync(ip, timeout);
 
@@ -78,8 +98,10 @@ namespace Workstation_Monitor
                 lock (lockObj)
                 { 
                     nFound++;
+                    return reply;
                 }
             }
+            return reply;
         }
     }
 }

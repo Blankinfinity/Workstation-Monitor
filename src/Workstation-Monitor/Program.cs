@@ -12,7 +12,7 @@ namespace Workstation_Monitor
         static void Main(string[] args)
         {
             PingSweep pingSweep = new PingSweep();
-            pingSweep.RunPingSweep_Async();
+            pingSweep.RunPingSweep_Async().Wait();
             Console.ReadLine();
         }
     }
