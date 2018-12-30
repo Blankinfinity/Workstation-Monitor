@@ -25,14 +25,14 @@ namespace Workstation_Monitor
             nFound = 0;
 
             stopWatch.Start();
-            System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping();
+            Ping p = new Ping();
 
             for (int i = StartIP; i <= StopIP; i++)
             {
                 ip = BaseIP + i.ToString();
-                System.Net.NetworkInformation.PingReply rep = p.Send(ip, timeout);
+                PingReply rep = p.Send(ip, timeout);
 
-                if (rep.Status == System.Net.NetworkInformation.IPStatus.Success)
+                if (rep.Status == IPStatus.Success)
                 {
                     Console.WriteLine("{ 0} is up: ({ 1}ms)", ip, rep.RoundtripTime);
                     nFound++;
@@ -57,7 +57,7 @@ namespace Workstation_Monitor
             {
                 ip = BaseIP + i.ToString();
 
-                System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping();
+                Ping p = new Ping();
                 var task = PingAndUpdateAsync(p, ip);
                 tasks.Add(task);
             }
@@ -89,11 +89,11 @@ namespace Workstation_Monitor
             }
         }
 
-        private async Task<PingReply> PingAndUpdateAsync(System.Net.NetworkInformation.Ping ping, string ip)
+        private async Task<PingReply> PingAndUpdateAsync(Ping ping, string ip)
         {
             var reply = await ping.SendPingAsync(ip, timeout);
 
-            if (reply.Status == System.Net.NetworkInformation.IPStatus.Success)
+            if (reply.Status == IPStatus.Success)
             {
                 lock (lockObj)
                 { 
